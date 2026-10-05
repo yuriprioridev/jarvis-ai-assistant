@@ -111,6 +111,7 @@ class Assistant(Agent, llm.ToolContext):
             chat_ctx=chat_ctx,
         )
         self.jarvis_control = JarvisControl()
+        self._acao_pendente = None
 
 
     # ────────────────────────────────
@@ -188,12 +189,13 @@ class Assistant(Agent, llm.ToolContext):
 
     @agents.function_tool
     async def fechar_programa(self, programa: str):
-        """Fecha um programa pelo nome (ex: 'chrome', 'notepad')."""
+        """Solicita fechar um programa. Exige confirmação explícita em outra fala."""
         exe = programa if programa.lower().endswith(".exe") else f"{programa}.exe"
-        res = subprocess.run(["taskkill", "/f", "/im", exe], capture_output=True)
-        if res.returncode == 0:
-            return f"Programa '{programa}' fechado com sucesso."
-        return f"Não foi possível fechar '{programa}'. Verifique o nome do processo."
+        self._acao_pendente = ("fechar_programa", exe)
+        return (
+            f"Ação pendente: fechar {exe}. "
+            "Peça confirmação explícita ao senhor antes de chamar confirmar_acao."
+        )
 
     @agents.function_tool
     async def abrir_programa(self, comando: str):
@@ -221,8 +223,12 @@ class Assistant(Agent, llm.ToolContext):
 
     @agents.function_tool
     async def deletar_item(self, caminho: str):
-        """Deleta um arquivo ou pasta pelo nome ou caminho."""
-        return self.jarvis_control.deletar_arquivo(caminho)
+        """Solicita apagar um arquivo ou pasta. Exige confirmação explícita em outra fala."""
+        self._acao_pendente = ("deletar_item", caminho)
+        return (
+            f"Ação pendente: apagar {caminho}. "
+            "Peça confirmação explícita ao senhor antes de chamar confirmar_acao."
+        )
 
     @agents.function_tool
     async def limpar_diretorio(self, caminho: str):
@@ -280,8 +286,63 @@ class Assistant(Agent, llm.ToolContext):
 
     @agents.function_tool
     async def energia_pc(self, acao: str):
-        """Controla a energia do PC. Ações: 'desligar', 'reiniciar', 'bloquear'."""
-        return self.jarvis_control.energia_pc(acao)
+        """Solicita ação de energia. Exige confirmação explícita em outra fala."""
+        acao = acao.strip().lower()
+        if acao not in {"desligar", "reiniciar", "bloquear"}:
+            return "Ação de energia inválida. Use desligar, reiniciar ou bloquear."
+
+        self._acao_pendente = ("energia_pc", acao)
+        return (
+            f"Ação pendente: {acao} o computador. "
+            "Peça confirmação explícita ao senhor antes de chamar confirmar_acao."
+        )
+
+    @agents.function_tool
+    async def confirmar_acao(self, confirmacao: str):
+        """
+        Executa a ação pendente somente após confirmação explícita.
+        O argumento deve ser 'confirmo' ou 'cancelo'.
+        """
+        if self._acao_pendente is None:
+            return "Não há nenhuma ação pendente para confirmar."
+
+        resposta = confirmacao.strip().lower()
+
+        if resposta not in {"confirmo", "cancelo"}:
+            return "Resposta inválida. Pergunte ao senhor se confirma ou cancela."
+
+        acao, alvo = self._acao_pendente
+        self._acao_pendente = None
+
+        if resposta == "cancelo":
+            return f"Ação cancelada: {acao} — {alvo}."
+
+        try:
+            if acao == "fechar_programa":
+                resultado = await asyncio.to_thread(
+                    subprocess.run,
+                    ["taskkill", "/f", "/im", alvo],
+                    capture_output=True,
+                    text=True,
+                )
+                if resultado.returncode == 0:
+                    return f"Programa '{alvo}' fechado."
+                return f"Não foi possível fechar '{alvo}'. Verifique o nome do processo."
+
+            if acao == "deletar_item":
+                return await asyncio.to_thread(
+                    self.jarvis_control.deletar_arquivo, alvo
+                )
+
+            if acao == "energia_pc":
+                return await asyncio.to_thread(
+                    self.jarvis_control.energia_pc, alvo
+                )
+
+            return "Ação pendente desconhecida; nenhuma alteração foi executada."
+
+        except Exception as e:
+            return f"Erro ao executar a ação confirmada: {e}"
 
     @agents.function_tool
     async def abrir_aplicativo(self, nome_app: str):
