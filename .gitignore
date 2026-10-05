@@ -1,0 +1,65 @@
+# ─── Variáveis de ambiente (NUNCA enviar para o git!) ──────────────────────────
+.env
+.env.local
+.env.*.local
+*.env
+
+# ─── Cache do Spotify (contém tokens de acesso) ────────────────────────────────
+.spotify_cache
+*.spotify_cache
+
+# ─── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+ENV/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ─── Node.js ───────────────────────────────────────────────────────────────────
+node_modules/
+.next/
+.nuxt/
+out/
+dist/
+.cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ─── IDEs e editores ───────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ─── Windows ───────────────────────────────────────────────────────────────────
+desktop.ini
+Thumbs.db
+ehthumbs.db
+$RECYCLE.BIN/
+
+# ─── Logs e dados temporários ──────────────────────────────────────────────────
+*.log
+logs/
+KMS/logs/
+
+# ─── Arquivos de sistema ───────────────────────────────────────────────────────
+.DS_Store
+*.bak
+*.tmp
