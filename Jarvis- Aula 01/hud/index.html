@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>JARVIS Core HUD</title>
+  <style>
+    :root {
+      --cyan: #00f0ff;
+      --orange: #ff5500;
+      --bg: #03070d;
+      --glow: 0 0 15px rgba(0, 240, 255, 0.4);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--cyan);
+      font-family: 'Courier New', Courier, monospace;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    /* Linhas de Grade e Scanlines */
+    .overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 6px 100%;
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    /* Top Bar */
+    header {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px 30px;
+      border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .status-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: var(--cyan);
+      border-radius: 50%;
+      margin-right: 8px;
+      box-shadow: var(--glow);
+    }
+
+    /* Área Central de Conteúdo */
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .panel {
+      display: none;
+      width: 85%;
+      height: 80%;
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      background: rgba(0, 15, 30, 0.6);
+      box-shadow: var(--glow);
+      padding: 30px;
+      position: absolute;
+      animation: fadeIn 0.5s ease forwards;
+    }
+    .panel.active { display: flex; flex-direction: column; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Painel IDLE (Reator / Pulso de Áudio) */
+    #panel-idle {
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      justify-content: center;
+      align-items: center;
+    }
+    .core-reactor {
+      width: 250px;
+      height: 250px;
+      border: 2px dashed var(--cyan);
+      border-radius: 50%;
+      position: relative;
+      animation: spin 15s linear infinite;
+      box-shadow: var(--glow);
+    }
+    .core-inner {
+      position: absolute;
+      top: 25px; left: 25px;
+      width: 200px; height: 200px;
+      border: 2px solid var(--orange);
+      border-radius: 50%;
+      animation: pulse 2.5s infinite alternate;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @keyframes pulse { 0% { transform: scale(0.9); opacity: 0.5; } 100% { transform: scale(1.05); opacity: 1; } }
+
+    /* Painéis Específicos */
+    .title {
+      font-size: 20px;
+      font-weight: bold;
+      letter-spacing: 3px;
+      margin-bottom: 20px;
+      border-bottom: 1px dashed var(--cyan);
+      padding-bottom: 8px;
+    }
+    .graph-mock {
+      display: flex;
+      align-items: flex-end;
+      gap: 20px;
+      height: 60%;
+      border-left: 2px solid var(--cyan);
+      border-bottom: 2px solid var(--cyan);
+      padding: 20px;
+    }
+    .bar {
+      flex: 1;
+      background: linear-gradient(to top, var(--cyan), transparent);
+      border-top: 2px solid var(--cyan);
+    }
+    .bar.orange {
+      background: linear-gradient(to top, var(--orange), transparent);
+      border-top: 2px solid var(--orange);
+    }
+
+    /* Footer */
+    footer {
+      display: flex;
+      justify-content: space-between;
+      padding: 15px 30px;
+      border-top: 1px solid rgba(0, 240, 255, 0.2);
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+
+  <header>
+    <div><span class="status-dot"></span>PROTOCOLO JARVIS // LINK ATIVO</div>
+    <div id="screen-id">DISPLAY: DETECTANDO...</div>
+    <div id="clock">00:00:00</div>
+  </header>
+
+  <main>
+    <!-- MODO ESPERA -->
+    <div id="panel-idle" class="panel active">
+      <div class="core-reactor">
+        <div class="core-inner"></div>
+      </div>
+    </div>
+
+    <!-- MAPA NACIONAL -->
+    <div id="panel-map_brazil_overlay" class="panel">
+      <div class="title">TOPOLOGIA TERRITORIAL // GEO-ANÁLISE</div>
+      <p style="margin-bottom: 20px;">Divisão regional mapeada e nós de transmissão detectados.</p>
+      <div style="flex: 1; border: 1px solid rgba(0, 240, 255, 0.2); display: flex; justify-content: center; align-items: center; font-size: 24px; color: var(--orange);">
+        [ REDE DE TRANSMISSÃO LATAM // POLARIZAÇÃO CRÍTICA ]
+      </div>
+    </div>
+
+    <!-- POLARIZAÇÃO SOCIAL -->
+    <div id="panel-polarization_chart" class="panel">
+      <div class="title">CONTRASTE SOCIOPOLÍTICO // ANÁLISE DE CAMADAS</div>
+      <div class="graph-mock">
+        <div class="bar" style="height: 80%;"><center style="margin-top: -25px;">CAMADA A</center></div>
+        <div class="bar orange" style="height: 35%;"><center style="margin-top: -25px; color: var(--orange);">CAMADA B</center></div>
+        <div class="bar" style="height: 90%;"><center style="margin-top: -25px;">ENGAGEMENT</center></div>
+        <div class="bar orange" style="height: 20%;"><center style="margin-top: -25px; color: var(--orange);">FRICÇÃO</center></div>
+      </div>
+    </div>
+
+    <!-- ETIMOLOGIA / NÓS -->
+    <div id="panel-etymology_network_graph" class="panel">
+      <div class="title">GRAFO ETIMOLÓGICO // DIABOLOS: AQUELE QUE SEPARA</div>
+      <p style="line-height: 1.8; font-size: 16px; margin-top: 30px;">
+        Raiz: <i>Diábolos</i> (Grego Antigo) &rarr; Segmentar / Fragmentar o coletivo.<br>
+        Estrutura de difusão de narrativas polarizadas ativada.<br>
+        Resiliência populacional: 14.2% [REDUZIDA].
+      </p>
+    </div>
+  </main>
+
+  <footer>
+    <div>BUFFER: SINCRO LIVEKIT</div>
+    <div>SISTEMA OPERACIONAL JARVIS v3.8</div>
+  </footer>
+
+  <script>
+    // Identifica qual tela é pelo link (ex: index.html?screen=1)
+    const urlParams = new URLSearchParams(window.location.search);
+    const screenNum = parseInt(urlParams.get('screen')) || 1;
+    document.getElementById('screen-id').textContent = `DISPLAY: MONITOR [${screenNum}]`;
+
+    // Relógio
+    setInterval(() => {
+      document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+    }, 1000);
+
+    // Conexão WebSocket
+    const socket = new WebSocket('ws://localhost:8765');
+
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        // Exibe se for para todas as telas ou se for a tela alvo
+        if (data.target_screen === 'all' || parseInt(data.target_screen) === screenNum) {
+          ativarVisual(data.action);
+        }
+      } catch (err) {
+        console.error("Erro no processamento do evento:", err);
+      }
+    };
+
+    function ativarVisual(idVisual) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      const target = document.getElementById(`panel-${idVisual}`);
+      if (target) {
+        target.classList.add('active');
+      } else {
+        document.getElementById('panel-idle').classList.add('active');
+      }
+    }
+  </script>
+</body>
+</html>

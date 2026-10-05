@@ -444,6 +444,30 @@ class Assistant(Agent, llm.ToolContext):
         )
 
 
+    @agents.function_tool
+    async def acionar_hud_visual(self, efeito: str, tela: int = 1):
+        """
+        Dispara um gráfico ou visual cinematográfico nos monitores do HUD.
+        Efeitos disponíveis:
+        - 'map_brazil_overlay' (Mapa e nós de rede)
+        - 'polarization_chart' (Gráficos de divisão social e dados)
+        - 'etymology_network_graph' (Grafo da raiz da palavra e manipulação)
+        - 'idle' (Retorna ao reator de áudio pulsante em modo de espera)
+        """
+        try:
+            import websockets
+            import json
+            async with websockets.connect("ws://localhost:8765") as ws:
+                payload = json.dumps({
+                    "action": efeito,
+                    "target_screen": tela
+                })
+                await ws.send(payload)
+            return f"Efeito visual '{efeito}' exibido na tela {tela}."
+        except Exception as e:
+            return f"Não foi possível conectar ao HUD: {e}"
+
+
 # ─────────────────────────────────────────
 # ENTRYPOINT
 # ─────────────────────────────────────────
