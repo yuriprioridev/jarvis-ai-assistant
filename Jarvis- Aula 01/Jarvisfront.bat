@@ -1,10 +1,10 @@
 @echo off
 title Jarvis Front - Dev Mode
-cd /d "%~dp0"
+cd /d "%~dp0..\agent-starter-react-main"
 
-where pnpm >nul 2>nul
+where npm >nul 2>nul
 if %errorlevel% neq 0 (
-    echo ERRO: pnpm nao esta instalado ou nao esta no PATH!
+    echo ERRO: npm nao esta instalado ou nao esta no PATH!
     pause
     exit
 )
@@ -15,9 +15,9 @@ echo ----------------------------
 
 if not exist "node_modules" (
     echo Instalando dependencias...
-    pnpm install
+    call npm install
 )
 
-pnpm dev
+npm run dev
 
 pause
